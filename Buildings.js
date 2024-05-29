@@ -1,4 +1,4 @@
-import { BuilderPawn } from "./Ally.js";
+import { Archer, BuilderPawn } from "./Ally.js";
 import { Circle, Polygon } from "./assets/js/collisions/Collisions.mjs";
 import { BuildingStates } from "./enums.js";
 import { BlueButton, HealthBar, assets } from "./utils.js";
@@ -20,6 +20,7 @@ export class Building {
     this.fireSpriteFrames = 6;
     this.fireFrameX = 0;
     this.fps = 30;
+    this.frameInterval = 1000 / this.fps; //for rebuilding
     this.fireFrameInterval = 1000 / this.fps;
     this.fireFrameTimer = 0;
   }
@@ -34,6 +35,7 @@ export class Building {
 
     if (this.currentState) this.currentState.update(deltaTime);
     if (this.button && this.button.visible) this.button.update(deltaTime);
+    if (this.archer) this.archer.update(deltaTime);
   }
 
   draw(ctx) {
@@ -57,6 +59,7 @@ export class Building {
     )
       this.healthBar.draw(ctx);
     if (this.button && this.button.visible) this.button.draw(ctx);
+    if (this.archer) this.archer.draw(ctx);
 
     if (this.game.debug) {
       if (this.hitbox && this.hitbox.hitboxRadius) {
@@ -193,6 +196,12 @@ export class Tower extends Building {
     this.states = [new Default(this), new Broken(this), new Build(this)];
     this.currentState = this.states[BuildingStates.DEFAULT];
     this.pawn = new BuilderPawn(this.game, this, assets.images.pawnBlue);
+    this.archer = new Archer(
+      this.game,
+      assets.images.archerBlue,
+      this.x + this.width / 2,
+      this.y + 40
+    );
     this.button = new BlueButton(game, this, "E", 40, 120);
     this.fireX = this.x + 55;
     this.fireY = this.y + 47;
@@ -292,9 +301,11 @@ export class GoblinTower extends Building {
     this.baseline = this.y + 168;
     this.spriteFrames = 3;
     this.frameX = 0;
-    this.frameInterval = 1000 / this.fps;
+    this.frameInterval = 1000 / 20;
     this.frameTimer = 0;
     this.totalHealth = 250;
+    this.fireX = this.x + this.width / 2;
+    this.fireY = this.y + this.height - 85;
     this.health = this.totalHealth;
     this.healthBar = new HealthBar(this.game, this, 0);
     this.states = [new Default(this), new Broken(this)];
@@ -304,18 +315,23 @@ export class GoblinTower extends Building {
   update(deltaTime) {
     this.collisionBody.x = this.x + this.xOffset - this.game.viewportX;
     this.collisionBody.y = this.y + this.yOffset - this.game.viewportY;
+    this.hitbox.x = this.x + this.xOffset - this.game.viewportX;
+    this.hitbox.y = this.y + this.yOffset - this.game.viewportY;
 
     this.currentState.update(deltaTime);
-    //sprite animation
-    if (this.frameTimer > this.frameInterval) {
-      if (this.frameX < this.spriteFrames) {
-        this.frameX++;
+
+    if (this.currentState === this.states[BuildingStates.DEFAULT]) {
+      //sprite animation
+      if (this.frameTimer > this.frameInterval) {
+        if (this.frameX < this.spriteFrames) {
+          this.frameX++;
+        } else {
+          this.frameX = 0;
+        }
+        this.frameTimer = 0;
       } else {
-        this.frameX = 0;
+        this.frameTimer += deltaTime;
       }
-      this.frameTimer = 0;
-    } else {
-      this.frameTimer += deltaTime;
     }
   }
 

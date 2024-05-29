@@ -63,3 +63,9 @@ export const SheepStates = {
   ATTACKED: 1,
   DEAD: 2,
 };
+export const EnemyStates = {
+  IDLE: 0,
+  MOVE: 1,
+  ATTACK: 2,
+  DYING: 3,
+};

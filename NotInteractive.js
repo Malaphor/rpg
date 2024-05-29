@@ -22,7 +22,7 @@ class NotInteractiveObject {
       this.height
     );
     //debug hitbox
-    if (this.game.debug) {
+    if (this.game.debug && this.hitbox) {
       ctx.beginPath();
       ctx.arc(
         this.hitbox.x,

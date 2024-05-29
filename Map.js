@@ -52,7 +52,7 @@ export default class Map {
                 startY = y * worldMap.tileheight;
               } else if (value === 31) {
                 //right side stair
-                endX = x * worldMap.tileheight + worldMap.tilewidth;
+                endX = x * worldMap.tilewidth + worldMap.tilewidth;
                 //line at top of stairs
                 this.levelIncreaseLines.push(
                   new Polygon(startX, startY, [
@@ -76,7 +76,7 @@ export default class Map {
                 //single tile width stair
                 startX = x * worldMap.tilewidth;
                 startY = y * worldMap.tileheight;
-                endX = x * worldMap.tileheight + worldMap.tilewidth;
+                endX = x * worldMap.tilewidth + worldMap.tilewidth;
                 //line at top of stairs
                 this.levelIncreaseLines.push(
                   new Polygon(startX, startY, [
@@ -84,7 +84,7 @@ export default class Map {
                     [endX - startX, 0],
                   ])
                 );
-                this.collisionOriginsData[1].push([startX, startY]);
+                this.collisionOriginsData[0].push([startX, startY]);
                 //line at bottom of stairs
                 this.levelDecreaseLines.push(
                   new Polygon(startX, startY + worldMap.tileheight, [
@@ -102,6 +102,8 @@ export default class Map {
         }
       }
     });
+    //console.log(this.levelIncreaseLines);
+    //console.log(this.levelDecreaseLines);
     this.levelDecreaseLines.forEach((line) =>
       this.game.collisionSystem[1].insert(line)
     );

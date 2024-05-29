@@ -66,11 +66,10 @@ window.addEventListener("load", function () {
       this.playerChar = new Character(this, assets.images.warriorBlue);
       this.input = new InputHandler(this);
       this.allGameObjects = [];
-      this.numArchers = 1;
-      this.archers = [];
+      this.numArchers = 0;
+      //this.archers = [];
       this.arrowPool = [];
-      this.createArchers();
-      this.createProjectilePool();
+      //this.createArchers();
       this.nearYedge = false;
       this.nearXedge = false;
       this.map = new Map(this);
@@ -79,6 +78,7 @@ window.addEventListener("load", function () {
       this.createNIO(); //not interactive objects
       this.buildings = [];
       this.createBuildings();
+      this.createProjectilePool();
       this.inventory = [
         {
           name: "gold",
@@ -122,7 +122,7 @@ window.addEventListener("load", function () {
       this.map.draw(ctx);
       this.allGameObjects = [
         this.playerChar,
-        ...this.archers,
+        //...this.archers,
         ...this.arrowPool,
         ...this.buildings,
         ...this.notInteractiveObjects,
@@ -191,44 +191,34 @@ window.addEventListener("load", function () {
       if (this.debug) this.renderCollisionBodies(ctx);
     }
 
+    //only for collision layers, objects handled on objects
     updateCollisionBodyPositions() {
-      this.collisionSystem[0]._bvh._bodies.forEach((object, index) => {
-        if (
-          object.radius ||
-          object === this.playerChar.collisionBody ||
-          index === this.collisionSystem[0]._bvh._bodies.length - 1
-        ) {
-          //object.x = this.playerChar.hitbox.x;
-          //object.y = this.playerChar.hitbox.y;
-          console.log("player");
-        } else {
-          console.log(index);
-          if (!this.nearYedge) {
-            object.y =
-              this.map.collisionOriginsData[0][index][1] - this.viewportY;
-          }
-          if (!this.nearXedge) {
-            object.x =
-              this.map.collisionOriginsData[0][index][0] - this.viewportX;
-          }
-        }
-      });
-      this.collisionSystem[1]._bvh._bodies.forEach((object, index) => {
+      for (let i = 0; i < this.map.collisionOriginsData[0].length; i++) {
+        const object = this.collisionSystem[0]._bvh._bodies[i];
         if (object.radius) {
-          //object.x = this.playerChar.hitbox.x;
-          //object.y = this.playerChar.hitbox.y;
-          console.log("play");
+          //object with radius is the player
         } else {
           if (!this.nearYedge) {
-            object.y =
-              this.map.collisionOriginsData[1][index][1] - this.viewportY;
+            object.y = this.map.collisionOriginsData[0][i][1] - this.viewportY;
           }
           if (!this.nearXedge) {
-            object.x =
-              this.map.collisionOriginsData[1][index][0] - this.viewportX;
+            object.x = this.map.collisionOriginsData[0][i][0] - this.viewportX;
           }
         }
-      });
+      }
+      for (let i = 0; i < this.map.collisionOriginsData[1].length; i++) {
+        const object = this.collisionSystem[1]._bvh._bodies[i];
+        if (object.radius) {
+          //object with radius is the player
+        } else {
+          if (!this.nearYedge) {
+            object.y = this.map.collisionOriginsData[1][i][1] - this.viewportY;
+          }
+          if (!this.nearXedge) {
+            object.x = this.map.collisionOriginsData[1][i][0] - this.viewportX;
+          }
+        }
+      }
     }
 
     handleCollisions() {
@@ -285,12 +275,12 @@ window.addEventListener("load", function () {
       this.collisionSystem[this.currentLevel].draw(ctx);
       ctx.stroke();
     }
-
+    /*
     createArchers() {
       for (let i = 0; i < this.numArchers; i++) {
         this.archers.push(new Archer(this, assets.images.archerBlue));
       }
-    }
+    }*/
 
     createProjectilePool() {
       for (let i = 0; i < this.numArchers; i++) {
@@ -398,6 +388,7 @@ window.addEventListener("load", function () {
                 y * 64
               )
             );
+            this.numArchers++;
           } else if (data[y][x] === 86) {
             //first blue castle tile
             this.buildings.push(

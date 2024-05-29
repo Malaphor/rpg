@@ -5,12 +5,12 @@ export default class InputHandler {
     this.game = game;
     window.addEventListener("keydown", (e) => {
       //console.log(e.key);
-      const key = e.key.toLocaleLowerCase();
+      const key = e.key.toLowerCase();
       if (this.game.buildMenu.visible) {
         if (key === Actions.CONFIRM) {
           if (this.game.buildMenu.hasEnoughResources()) {
-            this.game.buildMenu.removeFromInventory();
             this.game.buildMenu.target.setState(BuildingStates.BUILD);
+            this.game.buildMenu.removeFromInventory();
           } else {
             this.game.buildMenu.error = true;
           }
