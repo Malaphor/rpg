@@ -1,4 +1,5 @@
 import { Archer, BuilderPawn } from "./Ally.js";
+import { TNT } from "./Enemy.js";
 import { Circle, Polygon } from "./assets/js/collisions/Collisions.mjs";
 import { BuildingStates } from "./enums.js";
 import { BlueButton, HealthBar, assets } from "./utils.js";
@@ -310,6 +311,12 @@ export class GoblinTower extends Building {
     this.healthBar = new HealthBar(this.game, this, 0);
     this.states = [new Default(this), new Broken(this)];
     this.currentState = this.states[BuildingStates.DEFAULT];
+    this.tnt = new TNT(
+      this.game,
+      assets.images.tntRed,
+      this.x + this.width / 2,
+      this.y
+    );
   }
 
   update(deltaTime) {
@@ -319,6 +326,7 @@ export class GoblinTower extends Building {
     this.hitbox.y = this.y + this.yOffset - this.game.viewportY;
 
     this.currentState.update(deltaTime);
+    this.tnt.update(deltaTime);
 
     if (this.currentState === this.states[BuildingStates.DEFAULT]) {
       //sprite animation
@@ -351,6 +359,8 @@ export class GoblinTower extends Building {
     if (this.currentState) this.currentState.draw(ctx);
     if (this.healthBar && this.health < this.totalHealth)
       this.healthBar.draw(ctx);
+    this.tnt.draw(ctx);
+
     if (this.game.debug) {
       if (this.hitbox) {
         ctx.beginPath();

@@ -1,12 +1,12 @@
 import { Circle } from "./assets/js/collisions/Collisions.mjs";
-import { EnemyStates } from "./enums";
+import { EnemyDir, EnemyStates } from "./enums.js";
 
 class Enemy {
   constructor(game) {
     this.game = game;
     this.spriteWidth = 192;
     this.spriteHeight = 192;
-    this.scale = 0.5;
+    this.scale = 0.75;
     this.width = this.spriteWidth * this.scale;
     this.height = this.spriteHeight * this.scale;
     this.x;
@@ -45,15 +45,15 @@ class Enemy {
 export class TNT extends Enemy {
   constructor(game, imageObject, x, y) {
     super(game);
-    this.x = x;
-    this.y = y;
+    this.x = x - this.width / 2;
+    this.y = y - this.height / 4;
     this.flipDirection = false;
     this.image = imageObject.image;
     this.searchRadius = 300;
     this.hitbox = {
-      x: this.x + 48 - this.game.viewportX,
-      y: this.y + 50 - this.game.viewportY,
-      hitboxRadius: 13,
+      x: this.x + this.width / 2 - this.game.viewportX,
+      y: this.y + this.height / 2 - this.game.viewportY,
+      hitboxRadius: 18,
     }; /*
     this.collisionBody = new Circle(
       this.hitbox.x,
@@ -71,8 +71,8 @@ export class TNT extends Enemy {
 
   update(deltaTime) {
     //update hitbox position
-    this.hitbox.x = this.x + 48 - this.game.viewportX;
-    this.hitbox.y = this.y + 50 - this.game.viewportY;
+    this.hitbox.x = this.x + this.width / 2 - this.game.viewportX;
+    this.hitbox.y = this.y + this.height / 2 - this.game.viewportY;
     //this.collisionBody.x = this.hitbox.x;
     //this.collisionBody.y = this.hitbox.y;
     //sprite animation
@@ -93,15 +93,13 @@ export class TNT extends Enemy {
   }
 
   draw(ctx) {
-    if (this.isInView() === false) return;
-    /*
-    if (
-      this.facing === EnemyDir.LEFT
-    ) {
+    //if (this.isInView() === false) return;
+
+    if (this.facing === EnemyDir.LEFT) {
       this.flipDirection = true;
     } else {
       this.flipDirection = false;
-    }*/
+    }
 
     if (this.flipDirection === false) {
       ctx.drawImage(
@@ -156,19 +154,19 @@ class EnemyState {
 
 class TNTIdle extends EnemyState {
   start() {
-    this.tnt.spriteFrames = 5;
-    this.tnt.frameX = 0;
-    this.tnt.frameY = 0;
+    this.enemy.spriteFrames = 5;
+    this.enemy.frameX = 0;
+    this.enemy.frameY = 0;
     this.switchTime = Math.random() * 5000 + 5000;
     this.timer = 0;
   }
 
   update(deltaTime) {
     if (this.timer - deltaTime > this.switchTime) {
-      if (this.archer.facing === ArcherDir.LEFT) {
-        this.archer.facing = ArcherDir.RIGHT;
+      if (this.enemy.facing === EnemyDir.LEFT) {
+        this.enemy.facing = EnemyDir.RIGHT;
       } else {
-        this.archer.facing = ArcherDir.LEFT;
+        this.enemy.facing = EnemyDir.LEFT;
       }
       this.timer = 0;
     } else {
@@ -210,9 +208,9 @@ export class Projectile {
     this.width = this.spriteWidth * this.scale;
     this.height = this.spriteHeight * this.scale;
     this.hitbox = {
-      x: 15,
-      y: 3,
-      hitboxRadius: 4,
+      x: this.x + this.width / 2,
+      y: this.y + this.height / 2,
+      hitboxRadius: 10,
     };
     this.baseline = this.height;
     this.speedX;
@@ -257,32 +255,45 @@ export class Projectile {
     this.y += this.speedY * this.speedModifier;
     const dx = this.x - this.tnt.hitbox.x;
     const dy = this.y - this.tnt.hitbox.y;
+    this.angle -= Math.PI / 4;
     const distance = Math.hypot(dx, dy);
     if (distance > this.tnt.searchRadius) this.reset();
   }
 
   draw(ctx) {
     if (this.free) return;
-    //rotate arrow
-    ctx.setTransform(
-      Math.cos(this.angle),
-      Math.sin(this.angle),
-      -Math.sin(this.angle),
-      Math.cos(this.angle),
-      this.x,
-      this.y
-    );/
-    ctx.drawImage(
-      this.image,
-      0,
-      0,
-      this.spriteWidth,
-      this.spriteHeight,
-      -12, //0, //this.x,
-      -15, //this.y,
-      this.width,
-      this.height
-    );
+
+    if (this.tnt.flipDirection) {
+      //rotate tnt
+      ctx.setTransform(1, 0, 0, 1, this.x, this.y);
+      ctx.rotate(this.angle);
+      ctx.drawImage(
+        this.image,
+        0,
+        0,
+        this.spriteWidth,
+        this.spriteHeight,
+        -this.x / 2,
+        -this.y / 2,
+        this.width,
+        this.height
+      );
+    } else {
+      //rotate tnt
+      ctx.setTransform(1, 0, 0, 1, this.x, this.y);
+      ctx.rotate(this.angle);
+      ctx.drawImage(
+        this.image,
+        0,
+        0,
+        this.spriteWidth,
+        this.spriteHeight,
+        -this.x / 2,
+        -this.y / 2,
+        this.width,
+        this.height
+      );
+    }
     if (this.game.debug) {
       ctx.beginPath();
       ctx.arc(

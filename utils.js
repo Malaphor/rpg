@@ -32,6 +32,7 @@ class Assets {
       meatSpawn: "assets/Resources/Resources/M_Spawn.png",
       pawnBlue: "assets/Factions/Knights/Troops/Pawn/Blue/Pawn_Blue.png",
       fire: "assets/Effects/Fire/Fire.png",
+      tntRed: "assets/Factions/Goblins/Troops/TNT/Red/TNT_Red.png",
     };
 
     this.images = {};

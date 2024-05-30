@@ -11,7 +11,11 @@ If you plan on running this code, due to the ES6 module syntax and .mjs file ext
 ## Controls
 
 Spacebar: play/pause
+
 D: debug on/off
+
 A: attack
+
 Arrows: move character
+
 E: pick up resources/rebuild broken building

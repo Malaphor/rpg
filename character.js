@@ -9,8 +9,8 @@ export default class Character {
     this.scale = 0.5;
     this.width = this.spriteWidth * this.scale;
     this.height = this.spriteHeight * this.scale;
-    this.x = this.game.width / 2 - this.width / 2;
-    this.y = this.game.height / 2 - this.height / 2;
+    this.x = this.game.worldWidth - this.game.width; // / 2;
+    this.y = this.game.height * 1.8; // - this.height / 2;
     this.hitbox = {
       x: this.game.width / 2,
       y: this.game.height / 2,
