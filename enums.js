@@ -75,3 +75,8 @@ export const EnemyDir = {
   LEFT: 0,
   RIGHT: 1,
 };
+
+export const DynamiteStates = {
+  MOVING: 0,
+  EXPLODING: 1,
+};
