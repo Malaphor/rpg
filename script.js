@@ -5,7 +5,6 @@ import Character from "./character.js";
 import InputHandler from "./input.js";
 import Map from "./Map.js";
 import { worldMap } from "./assets/maps/map.js";
-import { Archer, Projectile } from "./Ally.js";
 import { GoblinSign, Scarecrow, Tree } from "./NotInteractive.js";
 import {
   ActiveGoldMine,
@@ -26,6 +25,7 @@ import {
   TreeStates,
 } from "./enums.js";
 import { BuildMenu } from "./Menu.js";
+import { Arrow, Dynamite, Projectile } from "./Projectile.js";
 
 window.addEventListener("load", function () {
   console.log("loaded");
@@ -67,8 +67,10 @@ window.addEventListener("load", function () {
       this.input = new InputHandler(this);
       this.allGameObjects = [];
       this.numArchers = 0;
+      this.numTntGoblins = 0;
       //this.archers = [];
       this.arrowPool = [];
+      this.dynamitePool = [];
       //this.createArchers();
       this.nearYedge = false;
       this.nearXedge = false;
@@ -124,16 +126,17 @@ window.addEventListener("load", function () {
         this.playerChar,
         //...this.archers,
         ...this.arrowPool,
+        ...this.dynamitePool,
         ...this.buildings,
         ...this.notInteractiveObjects,
         ...this.trees,
         ...this.sheep,
       ];
-      this.allGameObjects.sort((a, b) =>
+      this.allGameObjects.sort((a, b) => {
         a.baseline && b.baseline
           ? a.baseline - b.baseline
-          : a.y + a.height - (b.y + b.height)
-      );
+          : a.y + a.height - (b.y + b.height);
+      });
       for (const object of this.allGameObjects) {
         //if (object !== this.playerChar && !object.isInView()) continue;
         object.update(deltaTime);
@@ -284,7 +287,10 @@ window.addEventListener("load", function () {
 
     createProjectilePool() {
       for (let i = 0; i < this.numArchers; i++) {
-        this.arrowPool.push(new Projectile(this, assets.images.arrow));
+        this.arrowPool.push(new Arrow(this, assets.images.arrow));
+      }
+      for (let i = 0; i < this.numTntGoblins; i++) {
+        this.dynamitePool.push(new Dynamite(this, assets.images.dynamite));
       }
     }
 
@@ -422,6 +428,7 @@ window.addEventListener("load", function () {
                 y * 64
               )
             );
+            this.numTntGoblins++;
           } else if (data[y][x] === 268) {
             //first red castle tile
             this.buildings.push(
@@ -459,8 +466,8 @@ window.addEventListener("load", function () {
     }
 
     calcDistAngle(a, b) {
-      const dx = a.x - b.x;
-      const dy = a.y - b.y;
+      const dx = a.x - a.width / 4 - b.x;
+      const dy = a.y - a.height / 4 - b.y;
       const distance = Math.hypot(dx, dy);
       const aimX = dx / distance;
       const aimY = dy / distance;
@@ -575,6 +582,11 @@ window.addEventListener("load", function () {
       if (type === "arrow") {
         for (let i = 0; i < this.arrowPool.length; i++) {
           if (this.arrowPool[i].free) return this.arrowPool[i];
+        }
+      }
+      if (type === "dynamite") {
+        for (let i = 0; i < this.dynamitePool.length; i++) {
+          if (this.dynamitePool[i].free) return this.dynamitePool[i];
         }
       }
     }

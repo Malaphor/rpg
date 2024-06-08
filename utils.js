@@ -33,6 +33,7 @@ class Assets {
       pawnBlue: "assets/Factions/Knights/Troops/Pawn/Blue/Pawn_Blue.png",
       fire: "assets/Effects/Fire/Fire.png",
       tntRed: "assets/Factions/Goblins/Troops/TNT/Red/TNT_Red.png",
+      dynamite: "assets/Factions/Goblins/Troops/TNT/Dynamite/Dynamite.png",
     };
 
     this.images = {};

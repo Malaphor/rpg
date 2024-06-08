@@ -61,8 +61,11 @@ export class TNT extends Enemy {
       this.hitbox.hitboxRadius
     );*/
     this.baseline = this.hitbox.y + this.hitbox.hitboxRadius;
+    this.aim;
+    this.shooting = false;
     this.states = [
       new TNTIdle(this.game, this),
+      null, //usually a move state
       new TNTAttack(this.game, this),
     ];
     this.currentState;
@@ -70,6 +73,7 @@ export class TNT extends Enemy {
   }
 
   update(deltaTime) {
+    this.aim = this.game.calcDistAngle(this.game.playerChar, this);
     //update hitbox position
     this.hitbox.x = this.x + this.width / 2 - this.game.viewportX;
     this.hitbox.y = this.y + this.height / 2 - this.game.viewportY;
@@ -88,6 +92,17 @@ export class TNT extends Enemy {
       this.frameTimer = 0;
     } else {
       this.frameTimer += deltaTime;
+    }
+    //check distance between tnt & player
+    if (
+      this.aim[4] < this.searchRadius &&
+      this.currentState !== this.states[EnemyStates.ATTACK] &&
+      this.shooting === false
+    ) {
+      this.aim[0] < 0
+        ? (this.facing = EnemyDir.LEFT)
+        : (this.facing = EnemyDir.RIGHT);
+      this.setState(EnemyStates.ATTACK);
     }
     this.currentState.update(deltaTime);
   }
@@ -177,8 +192,9 @@ class TNTIdle extends EnemyState {
 
 class TNTAttack extends EnemyState {
   start() {
-    this.enemy.spriteFrames = 7;
+    this.enemy.spriteFrames = 6;
     this.enemy.frameX = 0;
+    this.enemy.frameY = 2;
   }
 
   throw() {
@@ -192,120 +208,5 @@ class TNTAttack extends EnemyState {
 
   update(deltaTime) {
     //
-  }
-}
-
-export class Projectile {
-  constructor(game, imageObject) {
-    this.game = game;
-    this.image = imageObject.image;
-    this.tnt;
-    this.x;
-    this.y;
-    this.spriteWidth = 64;
-    this.spriteHeight = 64;
-    this.scale = 0.5;
-    this.width = this.spriteWidth * this.scale;
-    this.height = this.spriteHeight * this.scale;
-    this.hitbox = {
-      x: this.x + this.width / 2,
-      y: this.y + this.height / 2,
-      hitboxRadius: 10,
-    };
-    this.baseline = this.height;
-    this.speedX;
-    this.speedY;
-    this.angle = 0;
-    this.speedModifier = 3;
-    this.free = true;
-  }
-
-  start(tnt) {
-    this.free = false;
-    this.tnt = tnt;
-    this.x = this.tnt.hitbox.x;
-    this.y = this.tnt.hitbox.y;
-    this.speedX = this.tnt.aim[0];
-    this.speedY = this.tnt.aim[1];
-  }
-
-  reset() {
-    this.tnt.shooting = false;
-    this.free = true;
-  }
-
-  isInView() {
-    if (
-      this.x + this.width < this.game.viewportX ||
-      this.x > this.game.viewportX + this.game.width
-    )
-      return false;
-    if (
-      this.y + this.height < this.game.viewportY ||
-      this.y > this.game.viewportY + this.game.height
-    )
-      return false;
-    return true;
-  }
-
-  update() {
-    if (this.free) return; //if not in use, dont update
-    //move dynamite
-    this.x += this.speedX * this.speedModifier;
-    this.y += this.speedY * this.speedModifier;
-    const dx = this.x - this.tnt.hitbox.x;
-    const dy = this.y - this.tnt.hitbox.y;
-    this.angle -= Math.PI / 4;
-    const distance = Math.hypot(dx, dy);
-    if (distance > this.tnt.searchRadius) this.reset();
-  }
-
-  draw(ctx) {
-    if (this.free) return;
-
-    if (this.tnt.flipDirection) {
-      //rotate tnt
-      ctx.setTransform(1, 0, 0, 1, this.x, this.y);
-      ctx.rotate(this.angle);
-      ctx.drawImage(
-        this.image,
-        0,
-        0,
-        this.spriteWidth,
-        this.spriteHeight,
-        -this.x / 2,
-        -this.y / 2,
-        this.width,
-        this.height
-      );
-    } else {
-      //rotate tnt
-      ctx.setTransform(1, 0, 0, 1, this.x, this.y);
-      ctx.rotate(this.angle);
-      ctx.drawImage(
-        this.image,
-        0,
-        0,
-        this.spriteWidth,
-        this.spriteHeight,
-        -this.x / 2,
-        -this.y / 2,
-        this.width,
-        this.height
-      );
-    }
-    if (this.game.debug) {
-      ctx.beginPath();
-      ctx.arc(
-        this.hitbox.x,
-        this.hitbox.y,
-        this.hitbox.hitboxRadius,
-        0,
-        Math.PI * 2
-      );
-      ctx.stroke();
-    }
-    //console.log(this.x);
-    ctx.setTransform(1, 0, 0, 1, 0, 0); //reset
   }
 }
