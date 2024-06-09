@@ -86,6 +86,7 @@ export class Dynamite extends Projectile {
 
   update(deltaTime) {
     if (this.free) return; //if not in use, dont update
+
     if (this.currentState !== this.states[DynamiteStates.EXPLODING]) {
       //move dynamite
       const diffX = this.game.viewportX - this.initialViewportX;
@@ -189,10 +190,11 @@ class DynamiteMoving extends DynamiteState {
 class DynamiteExploding extends DynamiteState {
   constructor(game, dynamite) {
     super(game, dynamite);
+    this.initialViewportX;
+    this.initialViewportY;
   }
 
   start() {
-    console.log("exploding");
     this.dynamite.spriteFrames = 6;
     this.dynamite.frameX = 0;
     this.dynamite.frameTimer = 0;
@@ -202,13 +204,13 @@ class DynamiteExploding extends DynamiteState {
     this.dynamite.width = this.dynamite.spriteWidth * this.dynamite.scale;
     this.dynamite.height = this.dynamite.spriteHeight * this.dynamite.scale;
     this.dynamite.image = assets.images.explosion.image;
+    this.initialViewportX = this.game.viewportX;
+    this.initialViewportY = this.game.viewportY;
   }
 
   update(deltaTime) {
-    console.log(this.dynamite.frameTimer);
     //sprite animation
     if (this.dynamite.frameTimer > this.dynamite.frameInterval) {
-      console.log(this.dynamite.frameX);
       if (this.dynamite.frameX < this.dynamite.spriteFrames) {
         this.dynamite.frameX++;
       } else {
@@ -222,14 +224,17 @@ class DynamiteExploding extends DynamiteState {
   }
 
   draw(ctx) {
+    const diffX = this.game.viewportX - this.initialViewportX;
+    const diffY = this.game.viewportY - this.initialViewportY;
+
     ctx.drawImage(
       this.dynamite.image,
       this.dynamite.frameX * this.dynamite.spriteWidth,
       0,
       this.dynamite.spriteWidth,
       this.dynamite.spriteHeight,
-      this.dynamite.x - this.dynamite.width / 2,
-      this.dynamite.y - this.dynamite.height / 2,
+      this.dynamite.x - this.dynamite.width / 2 - diffX,
+      this.dynamite.y - this.dynamite.height / 2 - diffY,
       this.dynamite.width,
       this.dynamite.height
     );

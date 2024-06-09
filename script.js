@@ -124,9 +124,6 @@ window.addEventListener("load", function () {
       this.map.draw(ctx);
       this.allGameObjects = [
         this.playerChar,
-        //...this.archers,
-        ...this.arrowPool,
-        ...this.dynamitePool,
         ...this.buildings,
         ...this.notInteractiveObjects,
         ...this.trees,
@@ -137,6 +134,11 @@ window.addEventListener("load", function () {
           ? a.baseline - b.baseline
           : a.y + a.height - (b.y + b.height);
       });
+      this.allGameObjects = [
+        ...this.allGameObjects,
+        ...this.arrowPool,
+        ...this.dynamitePool,
+      ];
       for (const object of this.allGameObjects) {
         //if (object !== this.playerChar && !object.isInView()) continue;
         object.update(deltaTime);
