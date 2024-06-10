@@ -1,5 +1,7 @@
 import { Circle } from "./assets/js/collisions/Collisions.mjs";
-import { EnemyDir, EnemyStates } from "./enums.js";
+import { worldMap } from "./assets/maps/map.js";
+import { EnemyDir, EnemyStates, TorchStates } from "./enums.js";
+import { HealthBar, assets } from "./utils.js";
 
 class Enemy {
   constructor(game) {
@@ -208,5 +210,176 @@ class TNTAttack extends EnemyState {
 
   update(deltaTime) {
     //
+  }
+}
+
+export class Torch extends Enemy {
+  constructor(game, imageObject, x, y) {
+    super(game);
+    this.x = x;
+    this.y = y;
+    this.startX = x;
+    this.startY = y;
+    this.endX = x + worldMap.tilewidth * 6;
+    this.targetX = this.endX;
+    this.scale = 0.5;
+    this.width = this.spriteWidth * this.scale;
+    this.height = this.spriteHeight * this.scale;
+    this.flipDirection = false;
+    this.image = imageObject.image;
+    this.searchRadius = 200;
+    this.hitbox = {
+      x: this.x + this.width / 2 - this.game.viewportX,
+      y: this.y + this.height / 2 - this.game.viewportY,
+      hitboxRadius: 18,
+    }; /*
+    this.collisionBody = new Circle(
+      this.hitbox.x,
+      this.hitbox.y,
+      this.hitbox.hitboxRadius
+    );*/
+    this.baseline = this.hitbox.y + this.hitbox.hitboxRadius;
+    this.aim;
+    this.maxSpeed = Math.random() * 0.5 + 1;
+    this.states = [
+      new TorchIdle(game, this),
+      new TorchMove(game, this),
+      new TorchAttack(game, this),
+      new TorchDying(game, this),
+    ];
+    this.currentState;
+    this.setState(TorchStates.MOVE);
+    this.totalHealth = 75;
+    this.health = this.totalHealth;
+    this.healthbar = new HealthBar(game, this);
+  }
+
+  update(deltaTime) {
+    if (this.targetX === this.startX) {
+      this.x -= this.maxSpeed;
+      this.flipDirection = true;
+      if (this.x < this.targetX) this.targetX = this.endX;
+    } else {
+      this.x += this.maxSpeed;
+      this.flipDirection = false;
+      if (this.x > this.targetX) this.targetX = this.startX;
+    } /*
+    if (this.y !== this.startY) {
+      this.y > this.startY
+        ? (this.y -= this.maxSpeed)
+        : (this.y += this.maxSpeed);
+    }*/
+    //update hitbox position
+    this.hitbox.x = this.x + this.width / 2 - this.game.viewportX;
+    this.hitbox.y = this.y + this.height / 2 - this.game.viewportY;
+    //this.collisionBody.x = this.hitbox.x;
+    //this.collisionBody.y = this.hitbox.y;
+    //sprite animation
+    if (this.frameTimer > this.frameInterval) {
+      if (this.frameX < this.spriteFrames) {
+        this.frameX++;
+      } else {
+        this.frameX = 0;
+      }
+      this.frameTimer = 0;
+    } else {
+      this.frameTimer += deltaTime;
+    }
+  }
+
+  draw(ctx) {
+    if (this.isInView() === false) return;
+
+    if (this.flipDirection === false) {
+      ctx.drawImage(
+        this.image,
+        this.spriteWidth * this.frameX,
+        this.spriteHeight * this.frameY,
+        this.spriteWidth,
+        this.spriteHeight,
+        this.x - this.game.viewportX,
+        this.y - this.game.viewportY,
+        this.width,
+        this.height
+      );
+    } else {
+      ctx.setTransform(-1, 0, 0, 1, 0, 0); //-1 flips horizontal
+      ctx.drawImage(
+        this.image,
+        this.spriteWidth * this.frameX,
+        this.spriteHeight * this.frameY,
+        this.spriteWidth,
+        this.spriteHeight,
+        -this.x - this.width + this.game.viewportX,
+        this.y - this.game.viewportY,
+        this.width,
+        this.height
+      );
+      ctx.setTransform(1, 0, 0, 1, 0, 0); //reset
+    }
+    //debug hitbox
+    if (this.game.debug) {
+      ctx.beginPath();
+      ctx.arc(
+        this.hitbox.x,
+        this.hitbox.y,
+        this.hitbox.hitboxRadius,
+        0,
+        Math.PI * 2
+      );
+      ctx.stroke();
+    }
+  }
+}
+
+class TorchIdle extends EnemyState {
+  constructor(game, enemy) {
+    super(game, enemy);
+  }
+
+  start() {
+    this.enemy.spriteFrames = 6;
+    this.enemy.frameX = 0;
+    this.enemy.frameY = 0;
+    this.switchTime = Math.random() * 1000 + 500;
+    this.timer = 0;
+    this.enemy.image = assets.images.torchRed.image;
+  }
+}
+
+class TorchMove extends EnemyState {
+  constructor(game, enemy) {
+    super(game, enemy);
+  }
+
+  start() {
+    this.enemy.spriteFrames = 5;
+    this.enemy.frameX = 0;
+    this.enemy.frameY = 1;
+  }
+}
+
+class TorchAttack extends EnemyState {
+  constructor(game, enemy) {
+    super(game, enemy);
+  }
+
+  start() {
+    this.enemy.spriteFrames = 5;
+    this.enemy.frameX = 0;
+    this.enemy.frameY = 2; //2 right, 3 down, 4 up
+  }
+}
+
+class TorchDying extends EnemyState {
+  constructor(game, enemy) {
+    super(game, enemy);
+  }
+
+  start() {
+    this.enemy.spriteFrames = 6;
+    this.enemy.frameX = 0;
+    this.enemy.frameY = 0;
+    this.enemy.image = assets.images.dead.image;
   }
 }

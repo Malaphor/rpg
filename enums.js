@@ -80,3 +80,10 @@ export const DynamiteStates = {
   MOVING: 0,
   EXPLODING: 1,
 };
+
+export const TorchStates = {
+  IDLE: 0,
+  MOVE: 1,
+  ATTACK: 2,
+  DYING: 3,
+};

@@ -1,3 +1,4 @@
+import { Archer } from "./Ally.js";
 import { DynamiteStates } from "./enums.js";
 import { assets } from "./utils.js";
 
@@ -18,8 +19,8 @@ export class Projectile {
     this.speedY;
     this.targetX;
     this.targetY;
-    this.angle = 0;
-    this.speedModifier = 1;
+    this.angle = -Math.PI / 4;
+    this.speedModifier = 3;
     this.initialViewportX;
     this.initialViewportY;
     this.free = true;
@@ -28,8 +29,13 @@ export class Projectile {
   start(source) {
     this.free = false;
     this.source = source;
-    this.x = this.source.hitbox.x;
-    this.y = this.source.hitbox.y;
+    if (this.source instanceof Archer) {
+      this.x = this.source.hitbox.x;
+      this.y = this.source.hitbox.y;
+    } else {
+      this.x = this.source.hitbox.x + this.source.hitbox.hitboxRadius * 0.7;
+      this.y = this.source.hitbox.y - this.source.hitbox.hitboxRadius * 0.7;
+    }
     this.speedX = this.source.aim[0];
     this.speedY = this.source.aim[1];
     this.initialViewportX = this.game.viewportX;

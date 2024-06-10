@@ -26,6 +26,7 @@ import {
 } from "./enums.js";
 import { BuildMenu } from "./Menu.js";
 import { Arrow, Dynamite, Projectile } from "./Projectile.js";
+import { Torch } from "./Enemy.js";
 
 window.addEventListener("load", function () {
   console.log("loaded");
@@ -71,6 +72,7 @@ window.addEventListener("load", function () {
       //this.archers = [];
       this.arrowPool = [];
       this.dynamitePool = [];
+      this.torchEnemyPool = [];
       //this.createArchers();
       this.nearYedge = false;
       this.nearXedge = false;
@@ -101,22 +103,6 @@ window.addEventListener("load", function () {
       this.sheep = [];
       this.trees = [];
       this.createResources();
-      /*this.allGameObjects = [
-        this.playerChar,
-        ...this.archers,
-        ...this.arrowPool,
-        ...this.buildings,
-        ...this.notInteractiveObjects,
-        ...this.trees,
-        ...this.sheep,
-      ];
-      this.allGameObjects.sort((a, b) =>
-        a.baseline && b.baseline
-          ? a.baseline - b.baseline
-          : a.y + a.height - (b.y + b.height)
-      );
-      //this.collisionsResult = this.collisionSystem.createResult();*/
-      console.log(this.collisionSystem[1]);
     }
 
     render(ctx, deltaTime) {
@@ -128,6 +114,7 @@ window.addEventListener("load", function () {
         ...this.notInteractiveObjects,
         ...this.trees,
         ...this.sheep,
+        ...this.torchEnemyPool,
       ];
       this.allGameObjects.sort((a, b) => {
         a.baseline && b.baseline
@@ -362,6 +349,7 @@ window.addEventListener("load", function () {
     }
 
     createBuildings() {
+      //building layer also contains goblin spawn points
       const layer = worldMap.layers.find((layer) => layer.name === "buildings");
       const data = [];
       for (let i = 0; i < layer.data.length; i += 60) {
@@ -461,6 +449,11 @@ window.addEventListener("load", function () {
                 x * 64,
                 y * 64
               )
+            );
+          } else if (data[y][x] === 474) {
+            //torch spawn points
+            this.torchEnemyPool.push(
+              new Torch(this, assets.images.torchRed, x * 64, y * 64)
             );
           }
         }
