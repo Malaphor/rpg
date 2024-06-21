@@ -33,6 +33,7 @@ export class Projectile {
       this.x = this.source.hitbox.x;
       this.y = this.source.hitbox.y;
     } else {
+      //move dynamite start point to line up with goblin sprite
       this.x = this.source.hitbox.x + this.source.hitbox.hitboxRadius * 0.7;
       this.y = this.source.hitbox.y - this.source.hitbox.hitboxRadius * 0.7;
     }

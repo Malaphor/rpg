@@ -85,5 +85,6 @@ export const TorchStates = {
   IDLE: 0,
   MOVE: 1,
   ATTACK: 2,
-  DYING: 3,
+  ATTACKED: 3,
+  DYING: 4,
 };

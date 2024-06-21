@@ -231,7 +231,8 @@ export class Torch extends Enemy {
     this.hitbox = {
       x: this.x + this.width / 2 - this.game.viewportX,
       y: this.y + this.height / 2 - this.game.viewportY,
-      hitboxRadius: 18,
+      hitboxRadius: 16,
+      attackRadius: 34,
     }; /*
     this.collisionBody = new Circle(
       this.hitbox.x,
@@ -240,11 +241,13 @@ export class Torch extends Enemy {
     );*/
     this.baseline = this.hitbox.y + this.hitbox.hitboxRadius;
     this.aim;
+    this.chasingPlayer = false;
     this.maxSpeed = Math.random() * 0.5 + 1;
     this.states = [
       new TorchIdle(game, this),
       new TorchMove(game, this),
       new TorchAttack(game, this),
+      new TorchAttacked(game, this),
       new TorchDying(game, this),
     ];
     this.currentState;
@@ -255,36 +258,56 @@ export class Torch extends Enemy {
   }
 
   update(deltaTime) {
-    if (this.targetX === this.startX) {
-      this.x -= this.maxSpeed;
-      this.flipDirection = true;
-      if (this.x < this.targetX) this.targetX = this.endX;
-    } else {
-      this.x += this.maxSpeed;
-      this.flipDirection = false;
-      if (this.x > this.targetX) this.targetX = this.startX;
-    } /*
-    if (this.y !== this.startY) {
-      this.y > this.startY
-        ? (this.y -= this.maxSpeed)
-        : (this.y += this.maxSpeed);
-    }*/
+    this.aim = this.game.calcDistAngle(this.game.playerChar, this);
+
     //update hitbox position
     this.hitbox.x = this.x + this.width / 2 - this.game.viewportX;
     this.hitbox.y = this.y + this.height / 2 - this.game.viewportY;
     //this.collisionBody.x = this.hitbox.x;
     //this.collisionBody.y = this.hitbox.y;
+
     //sprite animation
     if (this.frameTimer > this.frameInterval) {
       if (this.frameX < this.spriteFrames) {
         this.frameX++;
       } else {
         this.frameX = 0;
+        if (
+          this.currentState === this.states[TorchStates.ATTACK] ||
+          this.currentState === this.states[TorchStates.ATTACKED]
+        ) {
+          this.setState(TorchStates.MOVE);
+        }
       }
       this.frameTimer = 0;
     } else {
       this.frameTimer += deltaTime;
     }
+
+    if (
+      this.currentState !== this.states[TorchStates.ATTACKED] ||
+      this.currentState === this.states[TorchStates.DYING]
+    ) {
+      //check distance between torch & player
+      if (
+        this.aim[4] < this.searchRadius &&
+        (this.currentState !== this.states[TorchStates.ATTACK] ||
+          this.currentState !== this.states[TorchStates.DYING]) &&
+        this.chasingPlayer === false
+      ) {
+        this.chasingPlayer = true;
+        if (this.currentState !== this.states[TorchStates.MOVE])
+          this.setState(TorchStates.MOVE);
+      }
+      if (
+        this.aim[4] < this.hitbox.attackRadius &&
+        this.currentState !== this.states[TorchStates.ATTACK]
+      ) {
+        this.setState(TorchStates.ATTACK);
+      }
+    }
+
+    this.currentState.update(deltaTime);
   }
 
   draw(ctx) {
@@ -317,6 +340,9 @@ export class Torch extends Enemy {
       );
       ctx.setTransform(1, 0, 0, 1, 0, 0); //reset
     }
+
+    if (this.health < this.totalHealth) this.healthbar.update(deltaTime);
+
     //debug hitbox
     if (this.game.debug) {
       ctx.beginPath();
@@ -324,6 +350,15 @@ export class Torch extends Enemy {
         this.hitbox.x,
         this.hitbox.y,
         this.hitbox.hitboxRadius,
+        0,
+        Math.PI * 2
+      );
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(
+        this.hitbox.x,
+        this.hitbox.y,
+        this.hitbox.attackRadius,
         0,
         Math.PI * 2
       );
@@ -345,6 +380,15 @@ class TorchIdle extends EnemyState {
     this.timer = 0;
     this.enemy.image = assets.images.torchRed.image;
   }
+
+  update(deltaTime) {
+    if (this.timer > this.switchTime) {
+      this.enemy.setState(EnemyStates.MOVE);
+      this.timer = 0;
+    } else {
+      this.timer += deltaTime;
+    }
+  }
 }
 
 class TorchMove extends EnemyState {
@@ -357,6 +401,44 @@ class TorchMove extends EnemyState {
     this.enemy.frameX = 0;
     this.enemy.frameY = 1;
   }
+
+  update(deltaTime) {
+    if (!this.enemy.chasingPlayer) {
+      if (this.enemy.targetX === this.enemy.startX) {
+        this.enemy.x -= this.enemy.maxSpeed;
+        this.enemy.flipDirection = true;
+        if (this.enemy.x < this.enemy.targetX) {
+          this.enemy.targetX = this.enemy.endX;
+          this.enemy.setState(EnemyStates.IDLE);
+        }
+      } else {
+        this.enemy.x += this.enemy.maxSpeed;
+        this.enemy.flipDirection = false;
+        if (this.enemy.x > this.enemy.targetX) {
+          this.enemy.targetX = this.enemy.startX;
+          this.enemy.setState(EnemyStates.IDLE);
+        }
+      }
+      if (this.enemy.y !== this.enemy.startY) {
+        this.enemy.y > this.enemy.startY
+          ? (this.enemy.y -= this.enemy.maxSpeed)
+          : (this.enemy.y += this.enemy.maxSpeed);
+      }
+    } else {
+      //chase player
+      this.enemy.flipDirection = this.enemy.aim[2] < 0 ? true : false;
+      if (
+        Math.abs(this.enemy.aim[2]) >
+        this.enemy.hitbox.attackRadius - this.enemy.hitbox.hitboxRadius
+      )
+        this.enemy.x += this.enemy.maxSpeed * this.enemy.aim[0];
+      if (
+        Math.abs(this.enemy.aim[3]) >
+        this.enemy.hitbox.attackRadius - this.enemy.hitbox.hitboxRadius
+      )
+        this.enemy.y += this.enemy.maxSpeed * this.enemy.aim[1];
+    }
+  }
 }
 
 class TorchAttack extends EnemyState {
@@ -367,7 +449,39 @@ class TorchAttack extends EnemyState {
   start() {
     this.enemy.spriteFrames = 5;
     this.enemy.frameX = 0;
-    this.enemy.frameY = 2; //2 right, 3 down, 4 up
+
+    const angle = -Math.atan2(this.enemy.aim[3], this.enemy.aim[2]);
+
+    if (angle > Math.PI * (1 / 8) && angle < Math.PI * (3 / 8)) {
+      this.enemy.frameY = 4; //up
+    } else if (angle > -Math.PI * (3 / 8) && angle < -Math.PI * (1 / 8)) {
+      this.enemy.frameY = 3; //down
+    } else {
+      this.enemy.frameY = 2; //right
+    }
+  }
+
+  update(deltaTime) {
+    //
+  }
+}
+
+class TorchAttacked extends EnemyState {
+  constructor(game, enemy) {
+    super(game, enemy);
+  }
+
+  start() {
+    //set up so an empty sprite frame flashes
+    this.enemy.spriteFrames = 6;
+    this.enemy.frameX = 5;
+    this.enemy.frameY = 2;
+  }
+
+  update(deltaTime) {
+    if (this.enemy.health <= 0) {
+      this.enemy.setState(EnemyStates.DYING);
+    }
   }
 }
 
@@ -381,5 +495,9 @@ class TorchDying extends EnemyState {
     this.enemy.frameX = 0;
     this.enemy.frameY = 0;
     this.enemy.image = assets.images.dead.image;
+  }
+
+  update(deltaTime) {
+    //
   }
 }

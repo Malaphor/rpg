@@ -461,8 +461,10 @@ window.addEventListener("load", function () {
     }
 
     calcDistAngle(a, b) {
-      const dx = a.x - a.width / 4 - b.x;
-      const dy = a.y - a.height / 4 - b.y;
+      //const dx = a.x - a.width / 4 - b.x;
+      //const dy = a.y - a.height / 4 - b.y;
+      const dx = a.hitbox.x - b.hitbox.x;
+      const dy = a.hitbox.y - b.hitbox.y;
       const distance = Math.hypot(dx, dy);
       const aimX = dx / distance;
       const aimY = dy / distance;
