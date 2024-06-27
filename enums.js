@@ -88,3 +88,10 @@ export const TorchStates = {
   ATTACKED: 3,
   DYING: 4,
 };
+
+export const BarrelStates = {
+  IDLE: 0,
+  MOVE: 1,
+  ATTACK: 2,
+  EXPLODE: 3,
+};

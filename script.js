@@ -26,7 +26,7 @@ import {
 } from "./enums.js";
 import { BuildMenu } from "./Menu.js";
 import { Arrow, Dynamite, Projectile } from "./Projectile.js";
-import { Torch } from "./Enemy.js";
+import { Barrel, Torch } from "./Enemy.js";
 
 window.addEventListener("load", function () {
   console.log("loaded");
@@ -73,6 +73,7 @@ window.addEventListener("load", function () {
       this.arrowPool = [];
       this.dynamitePool = [];
       this.torchEnemyPool = [];
+      this.barrelEnemyPool = [];
       //this.createArchers();
       this.nearYedge = false;
       this.nearXedge = false;
@@ -115,6 +116,7 @@ window.addEventListener("load", function () {
         ...this.trees,
         ...this.sheep,
         ...this.torchEnemyPool,
+        ...this.barrelEnemyPool,
       ];
       this.allGameObjects.sort((a, b) => {
         a.baseline && b.baseline
@@ -454,6 +456,11 @@ window.addEventListener("load", function () {
             //torch spawn points
             this.torchEnemyPool.push(
               new Torch(this, assets.images.torchRed, x * 64, y * 64)
+            );
+          } else if (data[y][x] === 475) {
+            //barrel spawn points
+            this.barrelEnemyPool.push(
+              new Barrel(this, assets.images.barrelRed, x * 64, y * 64)
             );
           }
         }

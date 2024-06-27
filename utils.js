@@ -37,6 +37,7 @@ class Assets {
       explosion: "assets/Effects/Explosion/Explosions.png",
       torchRed: "assets/Factions/Goblins/Troops/Torch/Red/Torch_Red.png",
       dead: "assets/Factions/Knights/Troops/Dead/Dead.png",
+      barrelRed: "assets/Factions/Goblins/Troops/Barrel/Red/Barrel_Red.png",
     };
 
     this.images = {};
