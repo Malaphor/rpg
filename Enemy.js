@@ -251,13 +251,30 @@ export class Torch extends Enemy {
       new TorchDying(game, this),
     ];
     this.currentState;
-    this.setState(TorchStates.MOVE);
     this.totalHealth = 75;
     this.health = this.totalHealth;
     this.healthbar = new HealthBar(game, this);
+    this.dead = false;
+    this.deadTime = Math.random() * 5000 + 20000;
+    this.deadTimer = 0;
+    this.setState(TorchStates.MOVE);
   }
 
   update(deltaTime) {
+    if (this.dead) {
+      this.deadTimer += deltaTime;
+      if (this.deadTimer > this.deadTime) {
+        this.dead = false;
+        this.chasingPlayer = false;
+        this.deadTimer = 0;
+        this.x = this.startX;
+        this.y = this.startY;
+        this.hitbox.x = this.x + this.width / 2 - this.game.viewportX;
+        this.hitbox.y = this.y + this.height / 2 - this.game.viewportY;
+        this.setState(TorchStates.MOVE);
+      }
+      return;
+    }
     this.aim = this.game.calcDistAngle(this.game.playerChar, this);
 
     //update hitbox position
@@ -305,13 +322,16 @@ export class Torch extends Enemy {
       ) {
         this.setState(TorchStates.ATTACK);
       }
+      if (this.aim[4] > this.searchRadius) {
+        this.chasingPlayer = false;
+      }
     }
 
     this.currentState.update(deltaTime);
   }
 
   draw(ctx) {
-    if (this.isInView() === false) return;
+    if (this.isInView() === false || this.dead) return;
 
     if (this.flipDirection === false) {
       ctx.drawImage(
@@ -414,7 +434,7 @@ class TorchMove extends EnemyState {
       } else {
         this.enemy.x += this.enemy.maxSpeed;
         this.enemy.flipDirection = false;
-        if (this.enemy.x > this.enemy.targetX) {
+        if (this.enemy.x >= this.enemy.targetX) {
           this.enemy.targetX = this.enemy.startX;
           this.enemy.setState(TorchStates.IDLE);
         }
@@ -542,7 +562,7 @@ export class Barrel extends Enemy {
     this.setState(BarrelStates.IDLE);
     this.dead = false;
     this.deadTimer = 0;
-    this.deadTime = 2500; //25sec
+    this.deadTime = 25000; //25sec
   }
 
   update(deltaTime) {
@@ -615,6 +635,9 @@ export class Barrel extends Enemy {
     ) {
       this.setState(BarrelStates.ATTACK);
     }
+    if (this.aim[4] > this.searchRadius) {
+      this.chasingPlayer = false;
+    }
 
     this.currentState.update(deltaTime);
   }
@@ -677,9 +700,9 @@ export class Barrel extends Enemy {
 class BarrelIdle extends EnemyState {
   constructor(game, enemy) {
     super(game, enemy);
-    this.pauseTime = 3000;
+    this.pauseTime = Math.random() * 1000 + 3000;
     this.pauseTimer = 0;
-    this.idleTime = 5000;
+    this.idleTime = Math.random() * 1000 + 5000;
     this.idleTimer = 0;
     this.pop = false;
     this.pause = false;
@@ -758,7 +781,8 @@ class BarrelMove extends EnemyState {
 
   update(deltaTime) {
     if (!this.enemy.chasingPlayer) {
-      if (this.enemy.x !== this.enemy.startX) {
+      //use math.round else enemy.x never === enemy.startX
+      if (Math.round(this.enemy.x) !== this.enemy.startX) {
         if (this.enemy.x > this.enemy.startX) {
           this.enemy.flipDirection = true;
           this.enemy.x -= this.enemy.maxSpeed;
@@ -771,6 +795,8 @@ class BarrelMove extends EnemyState {
             ? (this.enemy.y -= this.enemy.maxSpeed)
             : (this.enemy.y += this.enemy.maxSpeed);
         }
+      } else {
+        this.enemy.setState(BarrelStates.IDLE);
       }
     } else {
       //chase player
@@ -822,8 +848,11 @@ class BarrelExplode extends EnemyState {
     this.enemy.spriteWidth = 192;
     this.enemy.spriteHeight = 192;
     this.enemy.scale = 0.85; //0.333
-    this.enemy.x -= 50;
-    this.enemy.y -= 50;
+    const sizeDiff = Math.floor(
+      this.enemy.spriteWidth * this.enemy.scale - this.enemy.width
+    );
+    this.enemy.x -= sizeDiff / 2;
+    this.enemy.y -= sizeDiff / 2;
     this.enemy.width = this.enemy.spriteWidth * this.enemy.scale;
     this.enemy.height = this.enemy.spriteHeight * this.enemy.scale;
     this.enemy.spriteFrames = 8;
