@@ -1,6 +1,13 @@
+import { Resource } from "./Resources.js";
 import { Circle } from "./assets/js/collisions/Collisions.mjs";
 import { worldMap } from "./assets/maps/map.js";
-import { BarrelStates, EnemyDir, EnemyStates, TorchStates } from "./enums.js";
+import {
+  BarrelStates,
+  EnemyDir,
+  EnemyStates,
+  ResourceStates,
+  TorchStates,
+} from "./enums.js";
 import { HealthBar, assets } from "./utils.js";
 
 class Enemy {
@@ -248,31 +255,29 @@ export class Torch extends Enemy {
       new TorchMove(game, this),
       new TorchAttack(game, this),
       new TorchAttacked(game, this),
-      new TorchDying(game, this),
+      new TorchDead(game, this),
     ];
     this.currentState;
     this.totalHealth = 75;
     this.health = this.totalHealth;
     this.healthbar = new HealthBar(game, this);
-    this.dead = false;
-    this.deadTime = Math.random() * 5000 + 20000;
-    this.deadTimer = 0;
+    this.resource = new Resource(
+      game,
+      this.x + this.width,
+      this.y + this.height,
+      "gold",
+      assets.images.gold,
+      assets.images.goldSpawn
+    );
     this.setState(TorchStates.MOVE);
   }
 
   update(deltaTime) {
-    if (this.dead) {
-      this.deadTimer += deltaTime;
-      if (this.deadTimer > this.deadTime) {
-        this.dead = false;
-        this.chasingPlayer = false;
-        this.deadTimer = 0;
-        this.x = this.startX;
-        this.y = this.startY;
-        this.hitbox.x = this.x + this.width / 2 - this.game.viewportX;
-        this.hitbox.y = this.y + this.height / 2 - this.game.viewportY;
-        this.setState(TorchStates.MOVE);
+    if (this.currentState === this.states[TorchStates.DEAD]) {
+      if (this.resource.visible) {
+        this.resource.update(deltaTime);
       }
+      this.currentState.update(deltaTime);
       return;
     }
     this.aim = this.game.calcDistAngle(this.game.playerChar, this);
@@ -282,6 +287,7 @@ export class Torch extends Enemy {
     this.hitbox.y = this.y + this.height / 2 - this.game.viewportY;
     //this.collisionBody.x = this.hitbox.x;
     //this.collisionBody.y = this.hitbox.y;
+    this.healthbar.update(); //move healthbar
 
     //sprite animation
     if (this.frameTimer > this.frameInterval) {
@@ -300,16 +306,22 @@ export class Torch extends Enemy {
     } else {
       this.frameTimer += deltaTime;
     }
+    if (
+      this.health <= 0 &&
+      this.currentState !== this.states[TorchStates.DEAD]
+    ) {
+      this.setState(TorchStates.DEAD);
+      return;
+    }
 
     if (
       this.currentState !== this.states[TorchStates.ATTACKED] ||
-      this.currentState === this.states[TorchStates.DYING]
+      this.currentState !== this.states[TorchStates.DEAD]
     ) {
       //check distance between torch & player
       if (
         this.aim[4] < this.searchRadius &&
-        (this.currentState !== this.states[TorchStates.ATTACK] ||
-          this.currentState !== this.states[TorchStates.DYING]) &&
+        this.currentState !== this.states[TorchStates.ATTACK] &&
         this.chasingPlayer === false
       ) {
         this.chasingPlayer = true;
@@ -331,7 +343,15 @@ export class Torch extends Enemy {
   }
 
   draw(ctx) {
-    if (this.isInView() === false || this.dead) return;
+    if (this.resource.visible) {
+      this.resource.draw(ctx);
+      return;
+    }
+    if (
+      this.isInView() === false ||
+      this.currentState === this.states[TorchStates.DEAD]
+    )
+      return;
 
     if (this.flipDirection === false) {
       ctx.drawImage(
@@ -361,7 +381,8 @@ export class Torch extends Enemy {
       ctx.setTransform(1, 0, 0, 1, 0, 0); //reset
     }
 
-    if (this.health < this.totalHealth) this.healthbar.update(deltaTime);
+    if (this.health < this.totalHealth && this.health > 0)
+      this.healthbar.draw(ctx);
 
     //debug hitbox
     if (this.game.debug) {
@@ -398,7 +419,6 @@ class TorchIdle extends EnemyState {
     this.enemy.frameY = 0;
     this.switchTime = Math.random() * 1000 + 500;
     this.timer = 0;
-    this.enemy.image = assets.images.torchRed.image;
   }
 
   update(deltaTime) {
@@ -500,25 +520,42 @@ class TorchAttacked extends EnemyState {
 
   update(deltaTime) {
     if (this.enemy.health <= 0) {
-      this.enemy.setState(TorchStates.DYING);
+      this.enemy.setState(TorchStates.DEAD);
     }
   }
 }
 
-class TorchDying extends EnemyState {
+class TorchDead extends EnemyState {
   constructor(game, enemy) {
     super(game, enemy);
+    this.deadTime = Math.random() * 5000 + 20000;
+    this.deadTimer = 0;
   }
 
   start() {
-    this.enemy.spriteFrames = 6;
-    this.enemy.frameX = 0;
-    this.enemy.frameY = 0;
-    this.enemy.image = assets.images.dead.image;
+    this.enemy.spriteFrames = 0;
+    this.enemy.frameX = 6;
+    this.enemy.frameY = 1;
+    this.deadTimer = 0;
+    this.enemy.resource.x = this.enemy.x;
+    this.enemy.resource.y = this.enemy.y;
+    this.enemy.resource.setState(ResourceStates.SPAWN);
   }
 
   update(deltaTime) {
-    //
+    if (this.deadTimer > this.deadTime) {
+      this.deadTimer = 0;
+      this.enemy.x = this.enemy.startX;
+      this.enemy.y = this.enemy.startY;
+      this.enemy.hitbox.x =
+        this.enemy.x + this.enemy.width / 2 - this.game.viewportX;
+      this.enemy.hitbox.y =
+        this.enemy.y + this.enemy.height / 2 - this.game.viewportY;
+      this.enemy.health = this.enemy.totalHealth;
+      this.enemy.setState(TorchStates.IDLE);
+    } else {
+      this.deadTimer += deltaTime;
+    }
   }
 }
 
@@ -717,6 +754,7 @@ class BarrelIdle extends EnemyState {
     this.switchTime = Math.random() * 2000 + 1000;
     this.timer = 0;
     this.enemy.image = assets.images.barrelRed.image;
+    this.idle = true;
   }
 
   update(deltaTime) {

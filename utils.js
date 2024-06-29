@@ -38,6 +38,7 @@ class Assets {
       torchRed: "assets/Factions/Goblins/Troops/Torch/Red/Torch_Red.png",
       dead: "assets/Factions/Knights/Troops/Dead/Dead.png",
       barrelRed: "assets/Factions/Goblins/Troops/Barrel/Red/Barrel_Red.png",
+      inventoryPanel: "assets/UI/Ribbons/panel.png",
     };
 
     this.images = {};
@@ -91,14 +92,21 @@ export class HealthBar {
       this.height
     );
   }
+
+  update(deltaTime) {
+    this.x = this.target.x + this.target.width / 2 - this.width / 2;
+    this.y = this.target.y + this.yOffset;
+  }
 }
 
 class Button {
-  constructor(game, target, xOffset, yOffset) {
+  constructor(game, target, xOffset = 0, yOffset = 0) {
     this.game = game;
     this.target = target;
     this.width = 32;
     this.height = 32;
+    this.xOffset = xOffset;
+    this.yOffset = yOffset;
     this.x = this.target.x + xOffset; // + this.target.width / 2 - this.width / 2;
     this.y = this.target.y + yOffset; // + 80 - this.width / 2;
     this.frameTimer = 0;
@@ -115,6 +123,11 @@ class Button {
     } else {
       this.frameTimer += deltaTime;
     }
+  }
+
+  move() {
+    this.x = this.target.x + this.xOffset;
+    this.y = this.target.y + this.yOffset;
   }
 
   draw(ctx) {

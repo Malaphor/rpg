@@ -86,7 +86,7 @@ export const TorchStates = {
   MOVE: 1,
   ATTACK: 2,
   ATTACKED: 3,
-  DYING: 4,
+  DEAD: 4,
 };
 
 export const BarrelStates = {

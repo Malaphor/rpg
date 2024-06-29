@@ -22,6 +22,7 @@ import {
   Directions,
   PlayerState,
   SheepStates,
+  TorchStates,
   TreeStates,
 } from "./enums.js";
 import { BuildMenu } from "./Menu.js";
@@ -155,9 +156,11 @@ window.addEventListener("load", function () {
           (object instanceof TreeResource &&
             object.currentState === object.states[TreeStates.DEAD]) ||
           (object instanceof SheepResource &&
-            object.currentState === object.states[SheepStates.DEAD])
+            object.currentState === object.states[SheepStates.DEAD]) ||
+          (object instanceof Torch &&
+            object.currentState === object.states[TorchStates.DEAD])
         ) {
-          if (this.isNearResource(object)) {
+          if (this.isNearResource(object.resource)) {
             object.resource.button.visible = true;
           } else {
             object.resource.button.visible = false;
@@ -596,6 +599,17 @@ window.addEventListener("load", function () {
     }
 
     drawInventory(ctx) {
+      ctx.drawImage(
+        assets.images.inventoryPanel.image,
+        25,
+        25,
+        450,
+        150,
+        0,
+        0,
+        220,
+        80
+      );
       this.inventory.forEach((item, index) => {
         const q = 55;
         ctx.drawImage(item.image, 0, 0, 128, 128, index * q, -5, 50, 50);
@@ -606,13 +620,11 @@ window.addEventListener("load", function () {
     }
 
     isNearResource(resource) {
-      const dx =
-        this.playerChar.hitbox.x - (resource.resource.x - this.viewportX);
-      const dy =
-        this.playerChar.hitbox.y - (resource.resource.y - this.viewportY);
+      const dx = this.playerChar.hitbox.x - (resource.x - this.viewportX);
+      const dy = this.playerChar.hitbox.y - (resource.y - this.viewportY);
       const distance = Math.hypot(dx, dy);
-      const sumOfRadii =
-        this.playerChar.hitbox.attackRadius + resource.resource.width;
+      const sumOfRadii = this.playerChar.hitbox.attackRadius + resource.width;
+      //console.log(distance, sumOfRadii);
       if (distance < sumOfRadii) {
         return true;
       }
@@ -637,7 +649,12 @@ window.addEventListener("load", function () {
     }
 
     doAnAction() {
-      const objects = [...this.trees, ...this.sheep, ...this.buildings];
+      const objects = [
+        ...this.trees,
+        ...this.sheep,
+        ...this.buildings,
+        ...this.torchEnemyPool,
+      ];
       objects.forEach((object) => {
         if (object.isInView()) {
           if (object instanceof House || object instanceof Tower) {
@@ -649,9 +666,13 @@ window.addEventListener("load", function () {
             }
           } else if (
             object instanceof TreeResource ||
-            object instanceof SheepResource
+            object instanceof SheepResource ||
+            object instanceof Torch
           ) {
-            if (object.resource.visible && this.isNearResource(object)) {
+            if (
+              object.resource.visible &&
+              this.isNearResource(object.resource)
+            ) {
               object.resource.addToInventory(object.resource);
             }
           }

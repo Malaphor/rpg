@@ -41,7 +41,7 @@ export class Resource {
         if (this.frameX < this.spriteFrames) {
           this.frameX++;
         } else {
-          this.currentState = this.states[ResourceStates.IDLE];
+          this.setState(ResourceStates.IDLE);
         }
         this.frameTimer = 0;
       } else {
@@ -69,7 +69,7 @@ export class Resource {
     const resourceIndex = this.game.inventory.findIndex(
       (element) => element.name === resource.name
     );
-    if (this.game.inventory[resourceIndex].quantity > 99) {
+    if (this.game.inventory[resourceIndex].quantity >= 99) {
       this.game.inventory[resourceIndex].quantity = 99;
     } else {
       this.game.inventory[resourceIndex].quantity++;
@@ -83,6 +83,7 @@ export class Resource {
       })
     );
     this.visible = false;
+    this.resourceTimer = 0;
   }
 }
 
@@ -99,7 +100,7 @@ class ResourceIdle extends ResourceState {
   }
 
   start() {
-    this.resourceTimer = 0;
+    this.resource.resourceTimer = 0;
   }
 
   draw(ctx) {
@@ -119,9 +120,10 @@ class ResourceSpawn extends ResourceState {
   }
 
   start() {
-    this.frameX = 0;
-    this.frameTimer = 0;
+    this.resource.frameX = 0;
+    this.resource.frameTimer = 0;
     this.resource.visible = true;
+    this.resource.button.move();
   }
 
   draw(ctx) {
