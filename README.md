@@ -2,7 +2,7 @@ Written in Vanilla JavaScript using ES6 module syntax
 
 Utilizes [Collisions](https://github.com/Sinova/Collisions) library by Sinova using .mjs file extensions
 
-Asset pack [Tiny Swords](https://pixelfrog-assets.itch.io/tiny-swords) by Pixel Frog and a UI panel for the inventory from [PX UI - Basic](https://karwisch.itch.io/pxui-basic) by Karwisch
+Asset pack [Tiny Swords](https://pixelfrog-assets.itch.io/tiny-swords) by Pixel Frog and a UI panel for the inventory from [PX UI - Basic](https://karwisch.itch.io/pxui-basic) by Karwisch. Heart icons from [Free Inventory UI Asset Pack](https://elvgames.itch.io/free-inventory-asset-pack) by ElvGames
 
 Tilemap for level design built with [Tiled](https://www.mapeditor.org/)
 
