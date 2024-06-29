@@ -34,8 +34,13 @@ export class Projectile {
       this.y = this.source.hitbox.y;
     } else {
       //move dynamite start point to line up with goblin sprite
-      this.x = this.source.hitbox.x + this.source.hitbox.hitboxRadius * 0.7;
-      this.y = this.source.hitbox.y - this.source.hitbox.hitboxRadius * 0.7;
+      if (this.source.flipDirection) {
+        this.x = this.source.hitbox.x - this.source.hitbox.hitboxRadius * 0.7;
+        this.y = this.source.hitbox.y - this.source.hitbox.hitboxRadius * 0.7;
+      } else {
+        this.x = this.source.hitbox.x + this.source.hitbox.hitboxRadius * 0.7;
+        this.y = this.source.hitbox.y - this.source.hitbox.hitboxRadius * 0.7;
+      }
     }
     this.speedX = this.source.aim[0];
     this.speedY = this.source.aim[1];
