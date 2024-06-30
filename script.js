@@ -185,6 +185,7 @@ window.addEventListener("load", function () {
       this.buildMenu.update(deltaTime);
       this.buildMenu.draw(ctx);
       this.drawInventory(ctx);
+      this.drawHealth(ctx);
       if (this.debug) this.renderCollisionBodies(ctx);
     }
 
@@ -617,6 +618,57 @@ window.addEventListener("load", function () {
         ctx.font = "14px sans-serif";
         ctx.fillText("x" + item.quantity, index * q + 40, 32);
       });
+    }
+
+    drawHealth(ctx) {
+      const fullHearts = Math.floor(this.playerChar.health / 50);
+      const halfHearts = (this.playerChar.health / 50) % 1 === 0 ? 0 : 1;
+      const emptyHearts =
+        this.playerChar.totalHealth / 50 - fullHearts - halfHearts;
+      let index = 0;
+
+      for (let i = 0; i < fullHearts; i++) {
+        ctx.drawImage(
+          assets.images.fullHeart.image,
+          0,
+          0,
+          48,
+          48,
+          index * 35 + (this.width - 105),
+          15,
+          25,
+          25
+        );
+        index++;
+      }
+      if (halfHearts) {
+        ctx.drawImage(
+          assets.images.halfHeart.image,
+          0,
+          0,
+          48,
+          48,
+          index * 35 + (this.width - 105),
+          15,
+          25,
+          25
+        );
+        index++;
+      }
+      for (let i = 0; i < emptyHearts; i++) {
+        ctx.drawImage(
+          assets.images.emptyHeart.image,
+          0,
+          0,
+          48,
+          48,
+          index * 35 + (this.width - 105),
+          15,
+          25,
+          25
+        );
+        index++;
+      }
     }
 
     isNearResource(resource) {

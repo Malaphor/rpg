@@ -39,6 +39,8 @@ export default class Character {
     this.fps = 30;
     this.frameInterval = 1000 / this.fps;
     this.frameTimer = 0;
+    this.totalHealth = 150;
+    this.health = this.totalHealth;
     this.states = [
       new CharacterIdle(this.game, this),
       new CharacterMove(this.game, this),

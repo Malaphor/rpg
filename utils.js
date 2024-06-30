@@ -39,6 +39,9 @@ class Assets {
       dead: "assets/Factions/Knights/Troops/Dead/Dead.png",
       barrelRed: "assets/Factions/Goblins/Troops/Barrel/Red/Barrel_Red.png",
       inventoryPanel: "assets/UI/Ribbons/panel.png",
+      fullHeart: "assets/UI/Icons/full_heart.png",
+      halfHeart: "assets/UI/Icons/half_heart.png",
+      emptyHeart: "assets/UI/Icons/empty_heart.png",
     };
 
     this.images = {};
